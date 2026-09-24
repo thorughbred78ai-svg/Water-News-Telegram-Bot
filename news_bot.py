@@ -268,41 +268,40 @@ def main():
         f"</code>\n\n"
     )
 
-# -------------------------
-# 建立新聞列表
-# -------------------------
+    # -------------------------
+    # 建立新聞列表
+    # -------------------------
 
-lines = []
+    lines = []
 
-for item in all_items:
+    for item in all_items:
 
-    time_str = item["pub_dt"].strftime(
-        "%H:%M"
-    )
+        time_str = item["pub_dt"].strftime(
+            "%H:%M"
+        )
 
-    # HTML escape
-    safe_title = html.escape(
-        item["title"]
-    )
+        # HTML escape
+        safe_title = html.escape(
+            item["title"]
+        )
 
-    safe_link = html.escape(
-        item["link"],
-        quote=True,
-    )
+        safe_link = html.escape(
+            item["link"],
+            quote=True,
+        )
 
-    # 每則新聞之間空一行
-    line = (
-        f'<a href="{safe_link}">'
-        f"{safe_title}"
-        f"</a> "
-        f"<code>"
-        f"[{html.escape(item['keyword'])}] "
-        f"{time_str}"
-        f"</code>\n\n"
-    )
+        # 每則新聞之間空一行
+        line = (
+            f'<a href="{safe_link}">'
+            f"{safe_title}"
+            f"</a> "
+            f"<code>"
+            f"[{html.escape(item['keyword'])}] "
+            f"{time_str}"
+            f"</code>\n\n"
+        )
 
-    lines.append(line)
-
+        lines.append(line)
 
     # -------------------------
     # Telegram 單則訊息限制
