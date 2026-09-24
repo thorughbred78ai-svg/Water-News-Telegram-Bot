@@ -1,7 +1,8 @@
 import os
 import sys
 import html
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from urllib.parse import quote
 
 import requests
@@ -21,12 +22,47 @@ if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
 
 
 # =========================
+# 時區設定
+# =========================
+
+TAIWAN_TZ = ZoneInfo("Asia/Taipei")
+
+
+# =========================
 # 搜尋設定
 # =========================
 
-KEYWORDS = ["臺灣設計展","台灣設計展","水之道","高灘地","河濱", "水利", "水務", "水務", "水資源", "水利署", "農水署", "滯洪", "埤塘", "自主防災社區", "水災", "水患", "豪雨", "大雨", "颱風", "淹水", "再生水", "地下水", "伏流水", "放流水", "汙水", "污水", "雨水"]
+KEYWORDS = [
+    "臺灣設計展",
+    "台灣設計展",
+    "水之道",
+    "高灘地",
+    "河濱",
+    "水利",
+    "水務",
+    "水資源",
+    "水利署",
+    "農水署",
+    "滯洪",
+    "埤塘",
+    "自主防災社區",
+    "水災",
+    "水患",
+    "豪雨",
+    "大雨",
+    "颱風",
+    "淹水",
+    "再生水",
+    "地下水",
+    "伏流水",
+    "放流水",
+    "汙水",
+    "污水",
+    "雨水",
+]
 
-# 稍微大於 60 分鐘，避免整點邊界遺漏
+# 每 30 分鐘執行一次。
+# 保留 70 分鐘，可以避免排程時間邊界造成新聞漏掉。
 LOOKBACK_MINUTES = 70
 
 GOOGLE_NEWS_RSS = (
@@ -63,7 +99,10 @@ def fetch_news(keyword):
                 }
             )
 
-    print(f"Found {len(items)} items for keyword: {keyword}")
+    print(
+        f"Found {len(items)} items "
+        f"for keyword: {keyword}"
+    )
 
     return items
 
@@ -76,20 +115,29 @@ def parse_pub_date(date_str):
     """
     Google News RSS 常見格式：
     Mon, 25 Sep 2026 08:00:00 GMT
+
+    最後轉成台灣時間 UTC+8。
     """
 
     try:
-        clean = date_str.replace("GMT", "+0000")
+        clean = date_str.replace(
+            "GMT",
+            "+0000"
+        )
 
         dt = datetime.strptime(
             clean,
             "%a, %d %b %Y %H:%M:%S %z",
         )
 
-        return dt.astimezone(timezone.utc)
+        return dt.astimezone(TAIWAN_TZ)
 
     except Exception as e:
-        print(f"Date parse error for '{date_str}': {e}")
+        print(
+            f"Date parse error for "
+            f"'{date_str}': {e}"
+        )
+
         return None
 
 
@@ -126,15 +174,20 @@ def send_telegram_message(text):
 # =========================
 
 def main():
-    now_utc = datetime.now(timezone.utc)
 
-    cutoff = now_utc - timedelta(
+    # -------------------------
+    # 取得台灣現在時間
+    # -------------------------
+
+    now_taiwan = datetime.now(TAIWAN_TZ)
+
+    cutoff = now_taiwan - timedelta(
         minutes=LOOKBACK_MINUTES
     )
 
     print(
-        f"Current UTC time: "
-        f"{now_utc.strftime('%Y-%m-%d %H:%M:%S')}"
+        f"Current Taiwan time: "
+        f"{now_taiwan.strftime('%Y-%m-%d %H:%M:%S')}"
     )
 
     print(
@@ -152,6 +205,7 @@ def main():
     for keyword in KEYWORDS:
 
         try:
+
             items = fetch_news(keyword)
 
             for item in items:
@@ -207,9 +261,10 @@ def main():
     # -------------------------
 
     header = (
-        f"<b>🔔 每小時新聞播報</b> "
+        f"<b>🔔 每半小時新聞播報</b> "
         f"<code>"
-        f"{now_utc.strftime('%Y-%m-%d %H:%M UTC')}"
+        f"{now_taiwan.strftime('%Y-%m-%d %H:%M')}"
+        f" 台灣時間"
         f"</code>\n\n"
     )
 
@@ -221,22 +276,22 @@ def main():
 
     for item in all_items:
 
-        time_str = item["pub_dt"].strftime("%H:%M")
+        time_str = item["pub_dt"].strftime(
+            "%H:%M"
+        )
 
-        # HTML escape，避免新聞標題中的
-        # &, <, > 造成 Telegram HTML 錯誤
+        # HTML escape
         safe_title = html.escape(
             item["title"]
         )
 
-        # URL 也進行 HTML escape
         safe_link = html.escape(
             item["link"],
             quote=True,
         )
 
         line = (
-            f'• <a href="{safe_link}">'
+            f'<a href="{safe_link}">'
             f"{safe_title}"
             f"</a> "
             f"<code>"
@@ -251,8 +306,6 @@ def main():
     # Telegram 單則訊息限制
     # -------------------------
 
-    # Telegram message 上限約 4096 字元。
-    # 預留一些空間，使用 4000 作為安全上限。
     MAX_MESSAGE_LENGTH = 4000
 
     messages = []
@@ -261,7 +314,6 @@ def main():
 
     for line in lines:
 
-        # 如果加入下一則會超過限制
         if (
             len(current)
             + len(line)
@@ -301,7 +353,8 @@ def main():
             send_telegram_message(message)
 
             print(
-                f"Message part {index} sent successfully."
+                f"Message part {index} "
+                f"sent successfully."
             )
 
         except Exception as e:
@@ -317,7 +370,6 @@ def main():
         f"Done. Sent {len(all_items)} "
         f"news items in {total} message(s)."
     )
-
 
 # =========================
 # 程式入口
