@@ -92,8 +92,8 @@ def main():
     # 依發布時間由新到舊排序
     all_items.sort(key=lambda x: x["pub_dt"], reverse=True)
 
-    header = f"<b>🔔 每小時新聞播報</b> <code>{now_utc.strftime('%Y-%m-%d %H:%M UTC')}</code>
-"
+    header = f"<b>🔔 每小時新聞播報</b> <code>{now_utc.strftime('%Y-%m-%d %H:%M UTC')}</code>"
+    
     lines = []
     for item in all_items:
         time_str = item["pub_dt"].strftime("%H:%M")
