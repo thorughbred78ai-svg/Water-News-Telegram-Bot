@@ -261,7 +261,7 @@ def main():
     # -------------------------
 
     header = (
-        f"<b>🔔 每半小時新聞播報</b> "
+        f"<b>🔔 每小時新聞播報</b> "
         f"<code>"
         f"{now_taiwan.strftime('%Y-%m-%d %H:%M')}"
         f" 台灣時間"
