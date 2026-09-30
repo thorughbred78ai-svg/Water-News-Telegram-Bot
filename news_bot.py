@@ -61,9 +61,9 @@ KEYWORDS = [
     "雨水",
 ]
 
-# 每 30 分鐘執行一次。
-# 保留 60 分鐘，可以避免排程時間邊界造成新聞漏掉。
-LOOKBACK_MINUTES = 60
+# 每 60 分鐘執行一次。
+# 保留 90 分鐘，可以避免排程時間邊界造成新聞漏掉。
+LOOKBACK_MINUTES = 90
 
 GOOGLE_NEWS_RSS = (
     "https://news.google.com/rss/search"
